@@ -246,6 +246,15 @@ void HierarchicalNSW::SaveInfo(const std::string &location)
     writeBinaryPOD(output, M_);
     writeBinaryPOD(output, maxM_);
     writeBinaryPOD(output, size_links_level0);
+
+    std::cout << "maxelements: " << maxelements_ << std::endl;
+    std::cout << "enterpoint_node: " << enterpoint_node << std::endl;
+    std::cout << "data_size_: " << data_size_ << std::endl;
+    std::cout << "offset_data: " << offset_data << std::endl;
+    std::cout << "size_data_per_element: " << size_data_per_element << std::endl;
+    std::cout << "M_: " << M_ << std::endl;
+    std::cout << "maxM_: " << maxM_ << std::endl;
+    std::cout << "size_links_level0: " << size_links_level0 << std::endl;
 }
 
 
@@ -326,75 +335,27 @@ void HierarchicalNSW::LoadEdges(const std::string &location)
 float HierarchicalNSW::fstdistfunc(const float *x, const float *y)
 {
     float PORTABLE_ALIGN32 TmpRes[8];
-#ifdef USE_AVX
-    size_t qty16 = d_ >> 4;
+    float *pVect1 = (float *) x;
+    float *pVect2 = (float *) y;
+    size_t qty = d_;
 
-            const float *pEnd1 = x + (qty16 << 4);
+    size_t qty4 = qty >> 2;
 
-            __m256 diff, v1, v2;
-            __m256 sum = _mm256_set1_ps(0);
-
-            while (x < pEnd1) {
-                v1 = _mm256_loadu_ps(x);
-                x += 8;
-                v2 = _mm256_loadu_ps(y);
-                y += 8;
-                diff = _mm256_sub_ps(v1, v2);
-                sum = _mm256_add_ps(sum, _mm256_mul_ps(diff, diff));
-
-                v1 = _mm256_loadu_ps(x);
-                x += 8;
-                v2 = _mm256_loadu_ps(y);
-                y += 8;
-                diff = _mm256_sub_ps(v1, v2);
-                sum = _mm256_add_ps(sum, _mm256_mul_ps(diff, diff));
-            }
-
-            _mm256_store_ps(TmpRes, sum);
-            float res = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3] + TmpRes[4] + TmpRes[5] + TmpRes[6] + TmpRes[7];
-
-            return (res);
-#else
-    size_t qty16 = d_ >> 4;
-
-    const float *pEnd1 = x + (qty16 << 4);
+    const float *pEnd1 = pVect1 + (qty4 << 2);
 
     __m128 diff, v1, v2;
     __m128 sum = _mm_set1_ps(0);
 
-    while (x < pEnd1) {
-        v1 = _mm_loadu_ps(x);
-        x += 4;
-        v2 = _mm_loadu_ps(y);
-        y += 4;
-        diff = _mm_sub_ps(v1, v2);
-        sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
-
-        v1 = _mm_loadu_ps(x);
-        x += 4;
-        v2 = _mm_loadu_ps(y);
-        y += 4;
-        diff = _mm_sub_ps(v1, v2);
-        sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
-
-        v1 = _mm_loadu_ps(x);
-        x += 4;
-        v2 = _mm_loadu_ps(y);
-        y += 4;
-        diff = _mm_sub_ps(v1, v2);
-        sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
-
-        v1 = _mm_loadu_ps(x);
-        x += 4;
-        v2 = _mm_loadu_ps(y);
-        y += 4;
+    while (pVect1 < pEnd1)
+    {
+        v1 = _mm_loadu_ps(pVect1);
+        pVect1 += 4;
+        v2 = _mm_loadu_ps(pVect2);
+        pVect2 += 4;
         diff = _mm_sub_ps(v1, v2);
         sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
     }
     _mm_store_ps(TmpRes, sum);
-    float res = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
-
-    return (res);
-#endif
+    return TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
 }
 }

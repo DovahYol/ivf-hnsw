@@ -8,4 +8,8 @@ Makefile
 CMakeCache.txt
 main
 *.swp
+.vs
+.vscode
+lib
+build
 
