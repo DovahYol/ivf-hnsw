@@ -103,11 +103,12 @@ int main(int argc, char **argv) {
         const uint32_t basic_batch_size = 1000000;
         const size_t nbatches = (opt.nb + basic_batch_size - 1) / basic_batch_size;
 
+        std::vector<float> batch(basic_batch_size * opt.d);
+        std::vector<idx_t> precomputed_idx(basic_batch_size);
+
         index->quantizer->efSearch = 220;
         for (size_t i = 0; i < nbatches; i++) {
-            uint32_t batch_size = i == nbatches - 1 ? (opt.nb - i * basic_batch_size) : basic_batch_size;
-            std::vector<float> batch(batch_size * opt.d);
-            std::vector<idx_t> precomputed_idx(batch_size);
+            uint32_t batch_size = (i == nbatches - 1) ? (opt.nb - i * basic_batch_size) : basic_batch_size;
 
             if (i % 10 == 0) {
                 std::cout << "[" << stopw.getElapsedTimeMicro() / 1000000 << "s] "
@@ -133,12 +134,12 @@ int main(int argc, char **argv) {
         std::cout << "Adding groups to index" << std::endl;
         StopW stopw = StopW();
 
-        const size_t batch_size = 1000000;
-        const size_t nbatches = opt.nb / batch_size;
+        const size_t basic_batch_size = 1000000;
+        const size_t nbatches = (opt.nb + basic_batch_size - 1) / basic_batch_size;
         size_t groups_per_iter = 250000;
 
-        std::vector<int8_t> batch(batch_size * opt.d);
-        std::vector<idx_t> idx_batch(batch_size);
+        std::vector<int8_t> batch(basic_batch_size * opt.d);
+        std::vector<idx_t> idx_batch(basic_batch_size);
 
         for (size_t ngroups_added = 0; ngroups_added < opt.nc; ngroups_added += groups_per_iter)
         {
@@ -154,6 +155,7 @@ int main(int argc, char **argv) {
             std::ifstream idx_input(opt.path_precomputed_idxs, std::ios::binary);
 
             for (size_t b = 0; b < nbatches; b++) {
+                const size_t batch_size = (b == nbatches - 1) ? (opt.nb - b * basic_batch_size) : basic_batch_size;
                 readXvec<int8_t>(base_input, batch.data(), opt.d, batch_size);
                 readXvec<idx_t>(idx_input, idx_batch.data(), batch_size, 1);
 
@@ -165,7 +167,7 @@ int main(int argc, char **argv) {
                     idx_t idx = idx_batch[i] % groups_per_iter;
                     for (size_t j = 0; j < opt.d; j++)
                         data[idx].push_back(batch[i * opt.d + j]);
-                    ids[idx].push_back(b * batch_size + i);
+                    ids[idx].push_back(b * basic_batch_size + i);
                 }
             }
 

@@ -13,7 +13,7 @@ efConstruction="500"  # Max number of candidate vertices in priority queue to ob
 
 nb="1402020720"       # Number of base vectors
 
-nt="1402020720"         # Number of learn vectors
+nt="13943174"         # Number of learn vectors
 nsubt="367531"        # Number of learn vectors to train (random subset of the learn set)
 
 nc="1975234"           # Number of centroids for HNSW quantizer
@@ -28,7 +28,7 @@ d="100"               # Vector dimension
 # PQ parameters #
 #################
 
-code_size="50"        # Code size per vector in bytes
+code_size="10"        # Code size per vector in bytes
 opq="on"              # Turn on/off opq encoding
 
 #####################
@@ -60,7 +60,7 @@ path_data="../spacev1b"
 path_model="./models"
 
 path_base="${path_data}/SPACEV1B.i8vecs"
-path_learn="${path_data}/SPACEV1B.i8vecs"
+path_learn="${path_data}/SPACEV1B_learn.i8vecs"
 path_gt="${path_data}/merged_truth.ivecs"
 path_q="${path_data}/un_vector_fy19_h1.i8vecs"
 path_centroids="${path_data}/SPTAGHeadVectors.fvecs"
